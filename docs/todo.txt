@@ -1,0 +1,25 @@
+TODO:
+
+[170402]
+
+Notes:
+Groups at KEIL are not subdirs in the project.
+You have to define it twice, as a subdir, and then under KEIL as a group.
+
+1.
+Move the Drivers folders from FW_L0 library into gps_logger project.
+What about uC registers .h file ?
+Also the group Drivers/CMSIS contains only one file located at ./sys.
+Move it to gps_logger/Drivers/CMSIS, what about other files from CMSIS ?
+Really see and repeat/modify compiler control string to correctly update
+all -I and -l when moving it into project subdir.
+
+But... maybe do not do it ?
+Because if library is outside of the project this is easy to update it ?
+
+2.
+Move all things after finish project structure into git repo.
+If compilable.
+
+
+
