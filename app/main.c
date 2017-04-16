@@ -51,7 +51,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define TRANSMITTER_BOARD
+#define TRANSMITTER_BOARD  //arek
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -72,6 +72,148 @@ static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferL
 
 /* Private functions ---------------------------------------------------------*/
 
+// Test Echo - Receive data and resend it back - 1 byte, 4 bytes, 256 bytes, 1024 bytes. 
+// Test1: 1 bytes - passed
+// Test2: 34 bytes - passed.
+// Test3: 4 bytes sequence with 34 bytes data received expected:
+// Observation: sending groups of 4 bytes will result positive after first 34 bytes
+//              sent. Next there is no echo - todo: clarify it.
+
+int main(void)
+{
+  uint16_t data_len = 34;
+  uint8_t i = 0;
+	
+  HAL_Init();
+  BSP_LED_Init(LED2);
+  BSP_LED_Off(LED2);
+  SystemClock_Config();
+
+  UartHandle.Instance        = USARTx;
+  UartHandle.Init.BaudRate   = 9600;
+  UartHandle.Init.WordLength = UART_WORDLENGTH_8B;
+  UartHandle.Init.StopBits   = UART_STOPBITS_1;
+  UartHandle.Init.Parity     = UART_PARITY_NONE;
+  UartHandle.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+  UartHandle.Init.Mode       = UART_MODE_TX_RX;
+  
+  if(HAL_UART_Init(&UartHandle) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  while (1)
+	{
+		if(HAL_UART_Receive_IT(&UartHandle, (uint8_t *)aRxBuffer, data_len) != HAL_OK)
+		{
+			Error_Handler();
+		}
+  
+    // Wait for the end of receive data
+    while (UartReady != SET)
+    {
+    } 
+    UartReady = RESET;
+  
+		//aTxBuffer[0] = aRxBuffer[0];
+		// 34
+		for(i = 0; i < 34; i++)
+		{
+			aTxBuffer[i] = aRxBuffer[i];
+		}
+		
+		if(HAL_UART_Transmit_IT(&UartHandle, (uint8_t*)aTxBuffer, data_len)!= HAL_OK)
+		{
+			Error_Handler();
+		}
+
+		while (UartReady != SET)
+		{
+		} 
+		UartReady = RESET;
+  }		
+
+  while (1)
+  {
+  }
+	
+}
+
+
+#if 0
+// Test Request-Response - send byte and receive response, if match green led on.
+// 1 byte, 4 bytes, 256 bytes
+// This is test for GPS.
+// Add support for full HAL_Status support: timeout, err, ok, etc.
+// Use virtual uart for debugging.
+int main(void)
+{
+  uint16_t data_len = 1;
+
+  HAL_Init();
+  BSP_LED_Init(LED2);
+  BSP_LED_Off(LED2);
+  SystemClock_Config();
+
+  UartHandle.Instance        = USARTx;
+  UartHandle.Init.BaudRate   = 9600;
+  UartHandle.Init.WordLength = UART_WORDLENGTH_8B;
+  UartHandle.Init.StopBits   = UART_STOPBITS_1;
+  UartHandle.Init.Parity     = UART_PARITY_NONE;
+  UartHandle.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+  UartHandle.Init.Mode       = UART_MODE_TX_RX;
+  
+  if(HAL_UART_Init(&UartHandle) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+	aTxBuffer[0] = 62;
+	
+  while (1)
+	{
+		if(HAL_UART_Transmit_IT(&UartHandle, (uint8_t*)aTxBuffer, data_len)!= HAL_OK)
+		{
+			Error_Handler();
+		}
+
+		while (UartReady != SET)
+		{
+		} 
+		UartReady = RESET;
+		
+		if(HAL_UART_Receive_IT(&UartHandle, (uint8_t *)aRxBuffer, data_len) != HAL_OK)
+		{
+			Error_Handler();
+		}
+  
+    // Wait for the end of receive data
+    while (UartReady != SET)
+    {
+    } 
+    UartReady = RESET;
+
+    if( 0 == Buffercmp((uint8_t*)aTxBuffer,(uint8_t*)aRxBuffer, data_len))
+    {
+      BSP_LED_On(LED2);
+    }
+	  else
+  	{
+	  	Error_Handler();
+	  }
+	}
+	
+	
+  while (1)
+  {
+  }
+
+}
+#endif
+
+
+
+#if 0
 /**
   * @brief  Main program.
   * @param  None
@@ -212,6 +354,8 @@ int main(void)
   {
   }
 }
+#endif
+
 
 /**
   * @brief  System Clock Configuration
@@ -335,6 +479,9 @@ static void Error_Handler(void)
 {
     while(1)
     {
+			// todo: flashing led
+			BSP_LED_Toggle(LED2);
+			HAL_Delay(500);
     }
 }
 
